@@ -10,13 +10,26 @@ use std::time::Instant;
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 3 {
-        eprintln!("Usage: {} <input_file> <output_file>", args[0]);
+    if args.len() != 4 {
+        eprintln!("Usage: {} <input_file> <output_file> l[1,2,3]", args[0]);
         std::process::exit(1);
     }
 
+
     let input_path = &args[1];
     let output_path = &args[2];
+
+
+    // get the compression level
+    let compression = match args[3].as_str() {
+        "l1" => Compression::new(1),
+        "l2" => Compression::new(2),
+        "l3" => Compression::new(3),
+        _ => {
+            eprintln!("Invalid compression level. Use 'l1', 'l2', or 'l3'");
+            std::process::exit(1);
+        }
+    };
 
     // Open the input file
     let input_file = File::open(input_path).unwrap_or_else(|err| {
@@ -32,7 +45,8 @@ fn main() -> io::Result<()> {
         std::process::exit(1);
     });
 
-    let mut encoder = GzEncoder::new(output_file, Compression::default());
+    let mut encoder = GzEncoder::new(output_file, compression);
+
     let start = Instant::now();
 
     // Copy data and compress
